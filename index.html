@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Assemble: build factories, assemble tokens, manufacture revenue</title>
+<meta name="description" content="Assemble is a Solana launchpad of autonomous token factory NFTs. Modular AI assembly lines research, brand and launch coins on pump.fun and route creator fees back to the factory.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/logo.png">
+<meta name="theme-color" content="#1C1C1C">
+<meta property="og:title" content="Assemble: build factories, assemble tokens, manufacture revenue">
+<meta property="og:description" content="Autonomous token factory NFTs. Modular AI assembly lines research, brand and launch coins on pump.fun and route creator fees back to the factory.">
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=Red+Hat+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<style>
+:root{
+  --bg:#F2EFE8;--panel:#FFFFFF;--ink:#1C1C1C;--soft:#4A4740;--mute:#7D786E;--rule:#DEDAD0;--edge:#1C1C1C;--frame:#1C1C1C;--hull:#1C1C1C;
+  --amb:#F2A900;--amb-ink:#8A5A00;--belt:#E4DFD3;--floor:#D6D0C3;
+  --grid:rgba(28,28,28,.05);--stripe:rgba(28,28,28,.035);
+  --f-head:'Barlow Condensed','Arial Narrow',sans-serif;
+  --f-ui:'Barlow',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-mono:'Red Hat Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#191919;--panel:#222220;--ink:#F6F1E7;--soft:#CFC8BA;--mute:#8E887C;--rule:#34332F;--edge:#F6F1E7;--frame:#4A4844;--hull:#F6F1E7;
+    --amb:#FFB400;--amb-ink:#FFC640;--belt:#2C2B28;--floor:#151514;
+    --grid:rgba(255,255,255,.03);--stripe:rgba(255,255,255,.035);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#191919;--panel:#222220;--ink:#F6F1E7;--soft:#CFC8BA;--mute:#8E887C;--rule:#34332F;--edge:#F6F1E7;--frame:#4A4844;--hull:#F6F1E7;
+  --amb:#FFB400;--amb-ink:#FFC640;--belt:#2C2B28;--floor:#151514;
+  --grid:rgba(255,255,255,.03);--stripe:rgba(255,255,255,.035);color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background-color:var(--bg);color:var(--ink);font:400 15.5px/1.55 var(--f-ui);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:32px 32px;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px dashed var(--amb-ink);outline-offset:3px}
+.wrap{max-width:1420px;margin:0 auto;padding:16px}
+.panel{background:var(--panel);border:1.5px solid var(--frame)}
+.hz{height:7px;background:repeating-linear-gradient(-45deg,var(--amb) 0 9px,#1C1C1C 9px 18px)}
+.ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0;padding:13px 18px;border-bottom:1px solid var(--rule);font:600 12px/1.2 var(--f-mono);letter-spacing:.07em;text-transform:uppercase}
+.ph small{font-weight:400;color:var(--mute);letter-spacing:.04em}
+.ph .pix{height:18px;width:auto} .ph .mini{height:18px;width:30px}
+.ph .end{margin-left:auto}
+.pad{padding:18px}
+.tag{display:inline-block;font:600 10.5px/1 var(--f-mono);letter-spacing:.05em;padding:5px 7px;background:var(--ink);color:var(--bg);text-transform:uppercase}
+.tag.amb{background:var(--amb);color:#1C1C1C}
+.tag.ghost{background:transparent;color:var(--soft);border:1px solid var(--rule)}
+.pix rect{fill:var(--hull)} .pix .y{fill:var(--amb)}
+.hull{fill:var(--hull)} .ambf{fill:var(--amb)} .idle{fill:var(--mute)}
+.small{font-size:13px;color:var(--soft)}
+.warn{color:#B42318}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .warn{color:#FF9B8C}}
+:root[data-theme="dark"] .warn{color:#FF9B8C}
+
+/* header */
+.top{margin-bottom:16px}
+.nav{display:grid;grid-template-columns:auto 1fr auto}
+.brand{display:flex;align-items:center;gap:12px;padding:10px 20px;border-right:1px solid var(--rule);text-decoration:none}
+.brand .mini{height:42px;width:70px;flex:none}
+.brand b{display:block;font:800 32px/.85 var(--f-head);letter-spacing:.02em;text-transform:uppercase}
+.brand small{display:block;margin-top:6px;font:400 11px/1 var(--f-mono);color:var(--mute);letter-spacing:.05em}
+.tabs{display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:15px 8px 12px;border-right:1px solid var(--rule);text-decoration:none;color:var(--soft);font:500 11px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.tabs a em{position:absolute;top:7px;right:8px;font-style:normal;color:var(--mute);font-size:10px}
+.tabs a .pix{height:22px;width:auto} .tabs a .mini{height:22px;width:37px}
+.tabs a:hover{background:var(--stripe)}
+.tabs a[aria-current="page"]{color:var(--ink);box-shadow:inset 0 -4px 0 var(--amb)}
+.walletcell{position:relative;display:flex;align-items:center;padding:12px 18px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font:700 14px/1.2 var(--f-ui);letter-spacing:.01em;border:1.5px solid var(--edge);background:var(--panel);color:var(--ink);padding:12px 16px;cursor:pointer;box-shadow:3px 3px 0 var(--edge);text-decoration:none;white-space:nowrap}
+.btn:active:not([disabled]){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--edge)}
+.btn.amb{background:var(--amb);color:#1C1C1C;border-color:#1C1C1C}
+.btn.dark{background:var(--ink);color:var(--bg)}
+.btn.sm{padding:8px 11px;font-size:12.5px;box-shadow:2px 2px 0 var(--edge)}
+.btn.wide{width:100%;padding:19px;font-size:16px}
+.btn[disabled]{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn .dot{width:9px;height:9px;background:#1C1C1C;display:inline-block}
+.btn.connected .dot{background:var(--amb);outline:1.5px solid var(--edge)}
+.chip{font:600 11px/1 var(--f-mono);letter-spacing:.03em;border:1.5px solid var(--edge);background:var(--panel);padding:7px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--amb);color:#1C1C1C;border-color:#1C1C1C}
+.chip[disabled]{opacity:.4;cursor:not-allowed}
+.link{font:700 13px/1 var(--f-ui);border:0;background:none;padding:3px 0;border-bottom:3px solid var(--amb);cursor:pointer;text-decoration:none}
+
+/* floor */
+.grid-hero{display:grid;grid-template-columns:minmax(300px,400px) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:grid;gap:16px;align-content:start;min-width:0}
+label,.lbl{display:block;font:500 11px/1.2 var(--f-mono);color:var(--soft);letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.big{display:flex;align-items:baseline;gap:10px;margin:14px 0 6px}
+.big b{font:800 110px/.8 var(--f-head)}
+.big span{font:700 30px var(--f-head);color:var(--mute)}
+.ticks{display:flex;gap:2px;height:16px;margin:8px 0 18px}
+.ticks i{flex:1;background:var(--rule)} .ticks i.on{background:var(--hull)} .ticks i.last{background:var(--amb)}
+.kv4{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rule);margin-bottom:18px}
+.kv4>div{padding:12px 14px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.kv4>div:nth-child(2n){border-right:0}
+.kv4>div:nth-last-child(-n+2){border-bottom:0}
+.kv4 b{font:500 17px/1.2 var(--f-mono)}
+.hero-copy{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:26px 28px 6px}
+h1{font:800 clamp(40px,5vw,76px)/.9 var(--f-head);text-transform:uppercase;margin:0;overflow-wrap:anywhere}
+h1 em{font-style:normal;color:var(--amb-ink)}
+.hero-copy p{font-size:16.5px;color:var(--soft);margin:0;max-width:62ch}
+.linewrap{padding:14px 18px 0}
+.line{display:block;width:100%;height:auto}
+.line .floor{fill:var(--floor)} .line .beltf{fill:var(--belt)} .line .st{fill:var(--hull)} .line .am{fill:var(--amb)} .line .mu{fill:var(--mute)}
+.line .lbl{font:600 4.3px var(--f-mono);fill:var(--soft);letter-spacing:.06em}
+.line .cnt{font:600 4.6px var(--f-mono);fill:var(--ink)}
+.line .tk{font:600 3.6px var(--f-mono);fill:#1C1C1C}
+.line .box{animation:ride 16s linear infinite}
+.line .roll{animation:spin 1s steps(4) infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ride{from{transform:translateX(0)}to{transform:translateX(262px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.line g.crate{cursor:help}
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;padding:14px 20px 18px;font:400 12.5px var(--f-mono);color:var(--soft)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:11px;height:11px;display:inline-block;border:1.5px solid var(--edge)}
+.kv2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.kv2>div{padding:14px 18px}
+.kv2>div+div{border-left:1px solid var(--rule)}
+.kv2 b{font:800 24px/1.05 var(--f-head);text-transform:uppercase;overflow-wrap:anywhere}
+.btnrow{display:flex;gap:12px;padding:18px;border-top:1px solid var(--rule)}
+.btnrow .btn{flex:1}
+.feed{display:grid;grid-template-columns:repeat(6,1fr)}
+.feed>div{padding:18px 14px;text-align:center;border-right:1px solid var(--rule)}
+.feed>div:last-child{border-right:0}
+.feed .fa{width:104px;height:auto;margin:0 auto 10px;display:block}
+.feed b{display:block;font:800 24px var(--f-head)}
+.feed p{margin:2px 0 6px;font-size:13px;color:var(--soft);line-height:1.35}
+.ago{font:400 11px var(--f-mono);color:var(--mute);letter-spacing:.04em;text-transform:uppercase}
+.empty{padding:28px 20px;color:var(--soft);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.empty .mini{height:40px;width:66px}
+.steps{display:grid;grid-template-columns:repeat(5,1fr)}
+.steps>div{padding:20px 18px 24px;border-right:1px solid var(--rule)}
+.steps>div:last-child{border-right:0}
+.steps .pix{height:32px;width:auto;margin-bottom:14px} .steps .mini{height:32px;width:53px;margin-bottom:14px}
+.steps .n{display:block;font:600 12px var(--f-mono);color:var(--amb-ink);margin-bottom:6px}
+.steps h3{margin:0 0 6px;font:800 25px/1.05 var(--f-head);text-transform:uppercase}
+.steps p{margin:0;color:var(--soft);font-size:14.5px}
+.mt{margin-top:16px}
+
+/* factory art */
+.fa .mbar{fill:var(--rule)} .fa .mon{fill:var(--amb)}
+
+/* build */
+.grid-2{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
+.step h3{font:800 34px/1 var(--f-head);text-transform:uppercase;margin:0 0 8px}
+.step p{margin:0 0 16px;color:var(--soft);max-width:68ch}
+.mods{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--rule)}
+.mods>div{padding:14px;border-right:1px solid var(--rule)}
+.mods>div:last-child{border-right:0}
+.mods .pix{height:30px;width:auto;margin-bottom:8px}
+.mods b{display:block;font:800 19px/1.05 var(--f-head);text-transform:uppercase}
+.mods span{display:block;font-size:13px;color:var(--soft);margin-top:4px}
+.mods em{display:block;font:500 11px var(--f-mono);font-style:normal;color:var(--amb-ink);margin-top:8px;text-transform:uppercase;letter-spacing:.04em}
+.note{font-size:13.5px;color:var(--soft);margin:14px 0 0;padding-left:12px;border-left:3px solid var(--amb)}
+.youget{display:flex;gap:18px;align-items:center;padding:18px}
+.youget .frame{border:1px solid var(--rule);padding:10px;width:160px;flex:none}
+.youget .fa{width:100%;height:auto;display:block}
+.youget b{display:block;font:800 48px/1 var(--f-head)}
+.youget span{color:var(--soft);font-size:14px}
+.rows>div{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.rows>div:last-child{border-bottom:0}
+.rows label{margin:0}
+.rows b{font:500 15px var(--f-mono);text-align:right}
+
+/* factories */
+.kv5{display:grid;grid-template-columns:repeat(5,1fr)}
+.kv5>div{padding:16px 18px;border-right:1px solid var(--rule)}
+.kv5>div:last-child{border-right:0}
+.kv5 b{display:block;font:500 21px/1.2 var(--f-mono)}
+.kv5 b.g{color:var(--amb-ink)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;padding:18px;border-top:1px solid var(--rule)}
+.frow{border-top:1px solid var(--rule)}
+.frow:first-of-type{border-top:0}
+.fhead{display:grid;grid-template-columns:170px minmax(0,1fr) minmax(0,340px);gap:0}
+.fhead>div{padding:18px}
+.fhead>div+div{border-left:1px solid var(--rule)}
+.fhead .fa{width:100%;height:auto;display:block}
+.fhead h3{margin:0 0 8px;font:800 40px/1 var(--f-head);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin:10px 0 14px}
+.stats b{display:block;font:500 15px var(--f-mono)}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.modrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--rule)}
+.modrow>div{padding:14px 16px;border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:6px}
+.modrow>div:last-child{border-right:0}
+.modrow .mh{display:flex;align-items:center;gap:8px}
+.modrow .mh .pix{height:20px;width:auto}
+.modrow b{font:800 17px/1 var(--f-head);text-transform:uppercase}
+.modrow small{font-size:12px;color:var(--soft)}
+.modrow .net{font:500 11px var(--f-mono);color:var(--amb-ink)}
+.modrow .btns{margin-top:auto;gap:6px}
+.pips{display:inline-flex;gap:3px;vertical-align:1px}
+.pips i{width:9px;height:9px;border:1px solid var(--edge);display:inline-block}
+.pips i.on{background:var(--amb)}
+.rentbox{border:1px solid var(--rule);padding:12px 14px;background:var(--stripe)}
+.rentbox b{display:block;font:700 14.5px var(--f-ui);margin-bottom:2px}
+.rentbox p{margin:0 0 10px;font-size:13px;color:var(--soft)}
+
+/* network + rentals */
+.filters{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding:16px 18px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg>span{font:500 11px var(--f-mono);color:var(--mute);letter-spacing:.05em;text-transform:uppercase;margin-right:4px}
+.svcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.svc{padding:16px 18px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.svc .mh{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.svc .pix{height:26px;width:auto}
+.svc h4{margin:0;font:800 22px/1 var(--f-head);text-transform:uppercase}
+.svc dl,.lcard dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0 0 12px;font:400 11.5px var(--f-mono)}
+.svc dt,.lcard dt{color:var(--mute)} .svc dd,.lcard dd{margin:0;text-align:right}
+.lists{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.lcard{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;padding:16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.lcard .fa{width:120px;height:auto;display:block}
+.lcard h4{margin:0 0 6px;font:800 28px/1 var(--f-head);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lcard .btn{width:100%;white-space:normal;text-align:center}
+
+/* how */
+.split{padding:22px 22px 6px}
+.squares{display:grid;grid-template-columns:repeat(50,1fr);gap:2px}
+.squares i{aspect-ratio:1;display:block}
+.sq-a{background:var(--amb)} .sq-b{background:var(--hull)} .sq-c{background:var(--mute);opacity:.5}
+.splitkeys{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);margin-top:18px}
+.splitkeys>div{padding:16px 22px;border-right:1px solid var(--rule)}
+.splitkeys>div:last-child{border-right:0}
+.splitkeys .k{display:flex;gap:8px;align-items:center;font:700 15px var(--f-ui)}
+.splitkeys .k i{width:13px;height:13px;display:inline-block}
+.splitkeys b{display:block;font:800 60px/1 var(--f-head);margin:8px 0 4px}
+.splitkeys p{margin:0;color:var(--soft);font-size:14px}
+.fly{padding:10px 18px 18px}
+.fly svg{display:block;width:100%;height:auto;max-width:900px;margin:0 auto}
+.fly .ringe{fill:none;stroke:var(--mute);stroke-width:1.5;stroke-dasharray:5 5}
+.fly .node rect{fill:var(--panel);stroke:var(--edge);stroke-width:1.5}
+.fly .node.hot rect{fill:var(--amb);stroke:#1C1C1C}
+.fly .node text{font:600 13px var(--f-ui);fill:var(--ink)}
+.fly .node.hot text{fill:#1C1C1C}
+.fly .arr{fill:var(--mute)}
+.fly ol{display:none;margin:0;padding:0 0 0 22px}
+.fly ol li{padding:6px 0;font-weight:700}
+.pbody{padding:18px 22px}
+.pbody p{margin:0 0 10px;color:var(--soft)}
+.pbody p:last-child{margin:0}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{font:500 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--soft);text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);background:var(--stripe)}
+td{padding:12px 14px;border-bottom:1px solid var(--rule);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right;font-family:var(--f-mono)}
+td .pix{height:22px;width:auto;vertical-align:middle}
+.tw{overflow-x:auto}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+
+/* docs */
+.docs{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.toc ol{list-style:none;margin:0;padding:8px 18px 14px}
+.toc li button{display:flex;gap:14px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:10px 0;cursor:pointer;font-size:14.5px}
+.toc li button span{font:400 11px var(--f-mono);color:var(--mute);padding-top:3px}
+.doc{scroll-margin-top:16px}
+.doc .body{padding:20px 24px 24px;max-width:80ch}
+.doc .body p,.doc .body li{color:var(--soft)}
+.doc .body strong{color:var(--ink)}
+.doc .body h4{font:800 22px var(--f-head);text-transform:uppercase;margin:20px 0 6px}
+.doc code{font:400 12.5px var(--f-mono);background:var(--stripe);padding:2px 5px}
+.doc .tw{margin:12px 0;border:1px solid var(--rule)}
+details{border-bottom:1px solid var(--rule)}
+details summary{cursor:pointer;padding:13px 0;font-weight:700;list-style:none}
+details summary::before{content:"▸";display:inline-block;width:18px;font-size:12px}
+details[open] summary::before{content:"▾"}
+details p{margin:0 0 14px 18px}
+
+/* overlays */
+.scrim{position:fixed;inset:0;background:rgba(12,12,12,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal{max-width:640px;width:100%;max-height:calc(100% - 32px);overflow:auto;box-shadow:6px 6px 0 var(--amb)}
+.x{margin-left:auto;background:none;border:0;font:700 18px var(--f-mono);cursor:pointer;padding:0 4px}
+.wlist{display:grid;gap:10px;padding:18px}
+.wopt{display:flex;align-items:center;gap:14px;border:1.5px solid var(--edge);background:var(--panel);padding:12px 14px;cursor:pointer;text-align:left;font:700 15px var(--f-ui);text-decoration:none}
+.wopt img,.wopt .ph-ico{width:28px;height:28px;flex:none}
+.wopt .ph-ico{background:var(--mute)}
+.wopt em{margin-left:auto;font:400 11px var(--f-mono);font-style:normal;color:var(--amb-ink);text-transform:uppercase;letter-spacing:.05em}
+.wopt:hover{background:var(--stripe)}
+.menu{position:absolute;right:18px;top:calc(100% - 4px);z-index:40;min-width:260px;box-shadow:4px 4px 0 var(--amb)}
+.menu .rows>div{padding:12px 16px}
+.mitems{display:grid;border-top:1px solid var(--rule)}
+.mitems button,.mitems a{text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:12px 16px;cursor:pointer;font:600 14px var(--f-ui);text-decoration:none}
+.mitems>*:last-child{border-bottom:0}
+.toasts{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:60;max-width:min(380px,calc(100% - 32px))}
+.toast{background:var(--ink);color:var(--bg);padding:12px 16px;font:600 14px var(--f-ui);box-shadow:4px 4px 0 var(--amb)}
+footer{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;padding:22px 2px 36px;font-size:13px;color:var(--soft)}
+
+@media (max-width:1200px){
+  .grid-hero{grid-template-columns:minmax(0,1fr)}
+  .grid-hero>.hero{order:-1}
+  .grid-2{grid-template-columns:minmax(0,1fr)}
+  .mods{grid-template-columns:repeat(3,1fr)}
+  .mods>div{border-bottom:1px solid var(--rule)}
+  .feed{grid-template-columns:repeat(3,1fr)}
+  .feed>div:nth-child(3n){border-right:0}
+  .feed>div:nth-child(-n+3){border-bottom:1px solid var(--rule)}
+  .steps{grid-template-columns:1fr 1fr}
+  .steps>div{border-bottom:1px solid var(--rule)}
+  .fhead{grid-template-columns:160px minmax(0,1fr)}
+  .fhead>div:last-child{grid-column:1 / -1;border-left:0;border-top:1px solid var(--rule)}
+  .modrow{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .modrow>div{border-bottom:1px solid var(--rule)}
+  .docs{grid-template-columns:minmax(0,1fr)}
+  .toc{position:static}
+  .kv5{grid-template-columns:repeat(3,1fr)}
+  .kv5>div:nth-child(3){border-right:0}
+  .kv5>div:nth-child(-n+3){border-bottom:1px solid var(--rule)}
+}
+@media (max-width:1100px){
+  .nav{grid-template-columns:1fr auto}
+  .brand{border-right:0}
+  .tabs{grid-column:1 / -1;grid-row:2;display:flex;border-top:1px solid var(--rule)}
+  .tabs a{flex:1 0 96px}
+}
+@media (max-width:760px){
+  .hero-copy{grid-template-columns:minmax(0,1fr);padding:24px 20px 6px}
+  .line .lbl,.line .cnt{display:none}
+}
+@media (max-width:700px){
+  .wrap{padding:10px}
+  .two,.mods{grid-template-columns:minmax(0,1fr)}
+  .mods>div{border-right:0}
+  .feed{grid-template-columns:1fr 1fr}
+  .feed>div{border-bottom:1px solid var(--rule)}
+  .feed>div:nth-child(2n){border-right:0}
+  .feed>div:nth-child(3n){border-right:1px solid var(--rule)}
+  .feed>div:nth-child(6n){border-right:0}
+  .steps{grid-template-columns:1fr}
+  .steps>div{border-right:0}
+  .kv5{grid-template-columns:1fr 1fr}
+  .kv5>div{border-right:1px solid var(--rule)!important;border-bottom:1px solid var(--rule)}
+  .kv5>div:nth-child(2n){border-right:0!important}
+  .splitkeys{grid-template-columns:1fr}
+  .splitkeys>div{border-right:0;border-bottom:1px solid var(--rule)}
+  .squares{grid-template-columns:repeat(25,1fr)}
+  .fly svg{display:none} .fly ol{display:block}
+  .big b{font-size:88px}
+  .kv2 b{font-size:22px}
+  .brand{padding:10px 12px;gap:8px}
+  .brand .mini{height:26px;width:43px}
+  .brand b{font-size:21px}
+  .brand small{font-size:10px}
+  .walletcell{padding:10px 12px}
+  .walletcell .btn{padding:9px 10px;font-size:12.5px;gap:7px}
+  .fhead{grid-template-columns:minmax(0,1fr)}
+  .fhead>div+div{border-left:0;border-top:1px solid var(--rule)}
+  .fhead .fa{max-width:200px}
+  .modrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .modrow>div:nth-child(2n){border-right:0}
+  .lists{grid-template-columns:minmax(0,1fr)}
+  .lcard{grid-template-columns:96px minmax(0,1fr)}
+  .lcard .fa{width:96px}
+}
+@media (prefers-reduced-motion:reduce){
+  .line .box,.line .roll{animation:none}
+  .btn:active:not([disabled]){transform:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="sprites"></defs></svg>
+
+<div class="wrap">
+  <header class="top panel">
+    <div class="hz" aria-hidden="true"></div>
+    <div class="nav">
+      <a class="brand" href="#floor" aria-label="Assemble home">
+        <svg class="mini" viewBox="0 0 80 48" shape-rendering="crispEdges" aria-hidden="true"><use href="#aW" class="hull"/><use href="#aY" class="ambf"/><use href="#aV" class="ambf"/></svg>
+        <span><b>Assemble</b><small>$ASSEMBLE</small></span>
+      </a>
+      <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+      <div class="walletcell">
+        <button class="btn amb" id="walletBtn" data-act="wallet" aria-haspopup="true"><i class="dot"></i><span>Connect wallet</span></button>
+        <div class="menu panel" id="walletMenu" hidden></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+
+  <footer>
+    <span>Assemble. Build factories. Assemble tokens. Manufacture revenue.</span>
+    <span>Factories, machines, $ASSEMBLE and every coin launched here can go to zero. Nothing here is financial advice.</span>
+  </footer>
+</div>
+
+<div id="overlay"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ---------- logo pixel grid ---------- */
+const ASM = ["..........................................wwwww.................................", ".........................................wwwwwww................................", "........................................ww.....ww...............................", ".......................................ww.......ww..............................", ".......................................ww..yyy..wwwww...........................", ".......................................ww..yyy..ww..wwwww.......................", ".......................................www.....www.yyywww.......................", "........................................www...www...yyy.ywwww...................", ".........................................wwwwwww.ww..yyyy.www...................", "..................................................ww..yyyyyywwww................", "..................................................www...yyyyyyww.wwwwwww........", ".........................................yy.........www..yyyyyy..wwwwwww........", ".........................................yy..........wwww..yy...ww.....ww.......", ".........................................yy............ww...y..ww.......ww......", ".........................................yy............wwww....w...yyy..ww......", ".......................................ww..ww.............www.ww..yyyy..ww......", "......................................www..www.............wwwww..yyyy..ww......", ".....................................wwwwwwwwww...............ww...yyy..ww......", ".....................................ww..ww..www...............ww.......ww......", "....................................www......www................ww.....ww.......", "....................................ww........ww................wwwwwwwww.......", "....................................ww........ww.................wwwwww.........", "....................................ww........ww..................yy..w.........", "....................................ww........ww..................yy..w.........", ".....................................w........w...............w..yyy..w.........", ".....................................w........w...............w..yyy..w.........", "..........wwwwwwwwww....wwwwwwww.....wwwyyyyywww..............w..yyy..w.........", "..........wwwwwwwwww..www......www..ww..yyyyy.ww..............w..yyy..w.........", "..........ww.....www..www......www..ww..yyyyy.ww..............w.......w.........", "........ww..yyyyy.ww..ww.yyyyyy.ww..ww..yyyyy.ww..........wwwwwwwwwwwwwwww......", "........ww..yyyyy.ww..ww.yyyyyy.ww..ww........ww..........wwwwwwwwwwwwwwww......", "........ww..yyyy..ww..ww.yyyyyy.ww..www.......ww..........ww............ww......", "........ww........ww..ww........ww..wwwwwwwwwwww.........www............wwww....", ".........w........w...w..........w...wwwwwwwwwww........wwwwyyyyyyyyyyyywwww....", "........................................................ww................ww....", "....wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww....", "....wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww....", "...ww..............................................................ww......ww...", "..www..............................................................ww......www..", "www.....yyyyy.........yyyyy..........yyyy..........yyyy..........ww...yyy....ww.", "www.....yyyyy.........yyyyy..........yyyy..........yyyy..........ww...yyy....ww.", "www.....yyyyy.........yyyyy..........yyyy..........yyyy..........ww...yyy....ww.", "www.....yyyyy.........yyyyy..........yyyy..........yyyy..........ww...yyy....ww.", "..ww...............................................................ww.......ww..", "..www..............................................................ww......ww...", "....wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww....", "....wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww....", "................................................................................"];
+
+/* ---------- config ---------- */
+const DAY = 86400, HOUR = 3600;
+const CFG = {
+  RPC: 'https://api.mainnet-beta.solana.com', // swap for your own RPC (Helius, Triton…) when you deploy
+  X: 'https://x.com/AssembleDotRent',
+  SUPPLY: 1000, MINT0: 0.25, MINT1: 1.25,
+  OPER: 0.60, BURN: 0.25, OPS: 0.15,
+  RENT_OWNER: 0.90, RENT_BURN: 0.10,
+  BASE_RATE: 1 / 200, INSTALL: 8000, MAX_LVL: 5,
+  PRICE0: 0.0000012, TOKEN_SUPPLY: 1e9,
+  START_T: 2 * DAY + 9 * HOUR,
+  OTHER_RATE: 4 / 1440
+};
+const MODS = [
+  { k: 'research', name: 'Research Station', short: 'Research', fn: 'Discovers emerging narratives', eff: '+25% launch rate per level' },
+  { k: 'design', name: 'Design Robot', short: 'Design', fn: 'Generates token branding and identities', eff: '+6% coin output per level' },
+  { k: 'assembly', name: 'Assembly Robot', short: 'Assembly', fn: 'Deploys tokens on pump.fun', eff: '+1 production line per level' },
+  { k: 'marketing', name: 'Marketing Robot', short: 'Marketing', fn: 'Creates promotional content', eff: '+10% longer trading life per level' },
+  { k: 'packaging', name: 'Packaging Machine', short: 'Packaging', fn: 'Prepares tokens for public launches', eff: 'Better odds of graduating per level' }
+];
+const upCost = l => 6000 * l;
+const FEES = [0.02, 0.04, 0.06];
+const DURS = [{ h: 1, name: '1 hour', off: 0 }, { h: 24, name: '1 day', off: 0.10 }, { h: 168, name: '1 week', off: 0.25 }];
+const NARR = { a: ['Capybara','Frog','Goose','Hamster','Penguin','Raccoon','Otter','Pigeon','Axolotl','Walrus','Gear','Bolt','Piston','Widget','Sprocket','Rivet','Crank','Lever','Valve','Spark'], b: ['Council','Summer','Army','Season','Parade','Club','Rally','Works','Labs','Forge','Mill','Plant','Line','Shop','Depot','Yard','Co','Union','Guild','Crew'] };
+
+/* ---------- utils ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function mulberry(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(r = Math.random){ let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const pick = (arr, r = Math.random) => arr[Math.floor(r() * arr.length)];
+const fmtSol = x => { x = +x || 0; return x >= 100 ? x.toFixed(1) : x >= 1 ? x.toFixed(2) : x >= 0.01 ? x.toFixed(3) : x > 0 ? x.toFixed(4) : '0'; };
+const fmtTok = x => { x = +x || 0; if (x >= 1e9) return (x/1e9).toFixed(2) + 'B'; if (x >= 1e6) return (x/1e6).toFixed(x >= 1e7 ? 1 : 2) + 'M'; if (x >= 1e3) return (x/1e3).toFixed(x >= 1e4 ? 0 : 1) + 'k'; return Math.round(x) + ''; };
+const pad2 = n => String(n).padStart(2, '0');
+function ago(t){ const s = S.t - t; if (s < 60) return 'just now'; if (s < HOUR) return Math.floor(s / 60) + ' min ago'; if (s < DAY) return `${Math.floor(s / HOUR)} h ${Math.floor(s % HOUR / 60)} min ago`; return Math.floor(s / DAY) + ' d ago'; }
+function left(t){ const s = Math.max(0, t - S.t); if (s < HOUR) return Math.max(1, Math.ceil(s / 60)) + ' min'; if (s < DAY) return `${Math.floor(s / HOUR)} h ${Math.floor(s % HOUR / 60)} min`; return `${Math.floor(s / DAY)} d ${Math.floor(s % DAY / HOUR)} h`; }
+const short = a => a ? a.slice(0, 4) + '…' + a.slice(-4) : '';
+const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const randAddr = r => Array.from({ length: 44 }, () => B58[Math.floor(r() * 58)]).join('');
+const mintPrice = n => CFG.MINT0 + (CFG.MINT1 - CFG.MINT0) * (Math.min(n, CFG.SUPPLY) - 1) / (CFG.SUPPLY - 1);
+const price = () => CFG.PRICE0 * (1 + S.burned / CFG.TOKEN_SUPPLY * 40);
+const r50 = x => Math.max(50, Math.round(x / 50) * 50);
+
+/* ---------- sprites ---------- */
+function runs(test){
+  let r = '';
+  ASM.forEach((row, y) => { let x = 0; while (x < row.length) { if (test(row[x], y)) { const s = x; while (x < row.length && test(row[x], y)) x++; r += `<rect x="${s}" y="${y}" width="${x - s}" height="1"/>`; } else x++; } });
+  return r;
+}
+document.getElementById('sprites').innerHTML = `<g id="aW">${runs(c => c === 'w')}</g><g id="aY">${runs((c, y) => c === 'y' && y < 37)}</g><g id="aV">${runs((c, y) => c === 'y' && y >= 37)}</g>`;
+function pix(rows){
+  const h = rows.length, w = rows[0].length; let r = '';
+  rows.forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; else if (c === 'y') r += `<rect class="y" x="${x}" y="${y}" width="1" height="1"/>`; }));
+  return `<svg class="pix" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+const MINI = `<svg class="mini" viewBox="0 0 80 48" shape-rendering="crispEdges" aria-hidden="true"><use href="#aW" class="hull"/><use href="#aY" class="ambf"/><use href="#aV" class="ambf"/></svg>`;
+const MICO = {
+  research: pix(['..###....','.#...#...','#..y..#..','#.yyy.#..','#..y..#..','.#...##..','..###..#.','.......##']),
+  design: pix(['.......##','......#y#','.....#y#.','....#y#..','...#y#...','..##.....','.##......','###......']),
+  assembly: pix(['.###.....','.#y#.....','.###.....','..#......','..#####..','......#..','.....###.','.....#.#.']),
+  marketing: pix(['......#..','....###..','..##..#..','##.y..#..','##.y..#..','..##..#..','....###..','......#..']),
+  packaging: pix(['#########','#...y...#','#...y...#','#########','#.......#','#..yyy..#','#.......#','#########'])
+};
+const ICO = {
+  floor: pix(['.........','.#####...','.#y.y#...','.#####...','#########','#.y.y.y.#','#########']),
+  build: pix(['....#....','...###...','..#####..','.#######.','.#.#.#.#.','.#.#y#.#.','.#######.']),
+  mine: pix(['.#######.','#.......#','#....####','#....#y##','#....####','#.......#','.#######.']),
+  net: pix(['y...y...y','.#..#..#.','..#.#.#..','...yyy...','..#.#.#..','.#..#..#.','y...y...y']),
+  rent: pix(['.###.....','#...#....','#.y.#####','#...#.#.#','.###.....']),
+  how: pix(['###...###','#y##.##y#','#..#.#..#','#.##.##.#','#..#.#..#','###.#.###']),
+  docs: pix(['######..','#....##.','#.yy..##','#......#','#.####.#','#......#','#.####.#','########']),
+  coin: pix(['..###..','.#yyy#.','#yy#yy#','#y###y#','#yy#yy#','.#yyy#.','..###..'])
+};
+
+/* ---------- state ---------- */
+const KEY = 'assemble-state-v1', KEYW = 'assemble-wallet-v1';
+let S, fById = new Map(), svcById = new Map();
+function reindex(){ fById = new Map(S.fac.map(f => [f.id, f])); svcById = new Map(S.svc.map(s => [s.id, s])); }
+function feedPush(x){ x.t = S.t; S.feed.unshift(x); if (S.feed.length > 60) S.feed.length = 60; }
+const svcOf = (f, k) => { const id = f.c[k]; const s = id ? svcById.get(id) : null; return s && s.active ? s : null; };
+const lvl = (f, k) => Math.max(f.m[k], svcOf(f, k) ? fById.get(svcOf(f, k).f).m[k] : 0);
+const capOf = f => Math.max(1, lvl(f, 'assembly'));
+const hourly = f => f.rv / Math.max(6, Math.min(168, (S.t - f.t) / HOUR));
+const fair = (f, share) => r50(0.75 * share * Math.max(hourly(f), 0.0015 * capOf(f)) / price());
+const opIsUser = f => f.rent ? f.rent.user : f.user;
+
+function addOther(r){
+  const n = S.fac.length + 1; if (n > CFG.SUPPLY) return;
+  const fee = mintPrice(n);
+  const m = {}; MODS.forEach(M => m[M.k] = Math.floor(r() * r() * 5.5));
+  m.research = Math.max(1, m.research); m.assembly = Math.max(1, m.assembly);
+  const f = { id: n, owner: randAddr(r), m, c: {}, live: 0, count: 0, unclaimed: 0, rentUn: 0, own: 0, life: 0, rv: 0, j: [], user: false, list: null, rent: null, t: S.t };
+  if (r() < 0.16) f.list = { share: pick([0.5, 0.6, 0.7, 0.8], r), k: 0.8 + r() * 0.6, price: 0 };
+  let burnTok = 0; MODS.forEach(M => { for (let l = 1; l <= m[M.k]; l++) burnTok += l === 1 ? CFG.INSTALL : upCost(l - 1); });
+  S.burnSol += fee * 0.5; S.burned += fee * 0.5 / price() + burnTok; S.ops += fee * 0.5;
+  S.fac.push(f); fById.set(f.id, f);
+  const best = MODS.map(M => M.k).sort((a, b) => m[b] - m[a])[0];
+  if (m[best] >= 2 && r() < 0.45) addSvc(f, best, pick(FEES, r));
+  MODS.forEach(M => { if (r() < 0.25) { const opts = S.svc.filter(s => s.active && s.k === M.k && s.f !== f.id && fById.get(s.f).m[M.k] > m[M.k]); if (opts.length) f.c[M.k] = pick(opts, r).id; } });
+  if (f.list) f.list.price = r50(fair(f, f.list.share) * f.list.k);
+}
+function addSvc(f, k, fee){ const s = { id: S.nextSvc++, f: f.id, k, fee, earned: 0, active: true, t: S.t }; S.svc.push(s); svcById.set(s.id, s); return s; }
+function produce(f){
+  const a = pick(NARR.a), b = pick(NARR.b);
+  const c = { id: S.nextCoin++, f: f.id, tick: (a.slice(0, 4) + b.slice(0, 1 + Math.floor(Math.random() * 3))).toUpperCase(), t0: S.t,
+    F: Math.exp(Math.log(0.08) + 1.35 * gauss()) * (1 + 0.06 * lvl(f, 'design')), L: Math.exp(Math.log(110) + 0.9 * gauss()) * (1 + 0.1 * lvl(f, 'marketing')),
+    fees: 0, alive: true, grad: false, svc: MODS.map(M => svcOf(f, M.k)).filter(Boolean).map(s => s.id) };
+  c.gradAt = c.F > 5 * (1 - 0.1 * lvl(f, 'packaging')) ? c.F * 0.3 : -1;
+  S.coins.push(c); f.live++; f.count++; f.j.unshift(c.id); if (f.j.length > 64) f.j.length = 64;
+  feedPush({ k: 'make', f: f.id, tick: c.tick }); S.made++; S.ver++;
+  if (opIsUser(f) && S.speed <= 60) toast(`Factory #${f.id} shipped $${c.tick}`);
+}
+function pay(c, f){
+  c.fees += f;
+  S.burnSol += f * CFG.BURN; S.burned += f * CFG.BURN / price(); S.ops += f * CFG.OPS;
+  const fa = fById.get(c.f); if (!fa) return;
+  let op = f * CFG.OPER;
+  for (const id of c.svc) { const s = svcById.get(id); if (!s) continue; const cut = f * s.fee; op -= cut; s.earned += cut; const owner = fById.get(s.f); if (owner) { owner.svcEarn = (owner.svcEarn || 0) + cut; if (owner.user) S.svcUn += cut; } }
+  const renter = fa.rent ? op * fa.rent.share : 0;
+  fa.rentUn += renter; fa.unclaimed += op - renter; fa.own += op - renter; fa.life += f * CFG.OPER; fa.rv += f * CFG.OPER;
+}
+function startRent(f, who, isUser, hours, cost, share){
+  f.rent = { who, user: isUser, until: S.t + hours * HOUR, share, hours }; f.rentUn = 0;
+  S.burned += cost * CFG.RENT_BURN;
+  if (f.user && !isUser) { S.wal.asm += cost * CFG.RENT_OWNER; toast(`Factory #${f.id} rented for ${hours === 1 ? '1 hour' : hours === 24 ? '1 day' : '1 week'}: +${fmtTok(cost * CFG.RENT_OWNER)} $ASSEMBLE`); }
+  S.ver++;
+}
+function endRent(f){
+  if (f.rent.user && f.rentUn > 0) { S.wal.sol += f.rentUn; toast(`Rental of factory #${f.id} ended. ${fmtSol(f.rentUn)} SOL settled to your wallet.`); }
+  f.rentUn = 0; f.rent = null; S.ver++;
+}
+function step(dm){
+  const t0 = S.t; S.t += dm * 60;
+  if (S.fac.length < CFG.SUPPLY && Math.random() < dm * CFG.OTHER_RATE) { addOther(Math.random); S.ver++; }
+  for (const f of S.fac) {
+    if (f.rent && S.t >= f.rent.until) endRent(f);
+    if (f.list && !f.rent && Math.random() < dm / 1100 * Math.max(0.05, Math.min(3, fair(f, f.list.share) / f.list.price))) {
+      const x = Math.random(), d = DURS[x < 0.5 ? 0 : x < 0.9 ? 1 : 2]; startRent(f, randAddr(Math.random), false, d.h, f.list.price * d.h * (1 - d.off), f.list.share);
+    }
+    if (f.live < capOf(f) && Math.random() < dm * CFG.BASE_RATE * (1 + 0.25 * (lvl(f, 'research') - 1)) * Math.sqrt(capOf(f)) * (f.user && !f.count ? 8 : 1)) produce(f);
+  }
+  for (const s of S.svc) {
+    if (!s.active || !fById.get(s.f)?.user) continue;
+    const sl = fById.get(s.f).m[s.k];
+    const pool = S.fac.filter(f => !f.user && f.m[s.k] < sl && svcOf(f, s.k)?.id !== s.id);
+    if (pool.length && Math.random() < dm / 500 * (sl / 3) * (0.04 / s.fee)) { const f = pick(pool); f.c[s.k] = s.id; S.ver++; if (S.speed <= 60) toast(`Factory #${f.id} contracted your ${MODS.find(M => M.k === s.k).short} line`); }
+  }
+  for (const c of S.coins) {
+    if (!c.alive) continue;
+    const a0 = Math.max(0, (t0 - c.t0) / 60), a1 = Math.max(0, (S.t - c.t0) / 60);
+    const fee = c.F * (Math.exp(-a0 / c.L) - Math.exp(-a1 / c.L));
+    if (fee > 0) pay(c, fee);
+    if (!c.grad && c.gradAt > 0 && c.fees >= c.gradAt) { c.grad = true; S.ver++; }
+    if (a1 > 3 * c.L) { c.alive = false; const f = fById.get(c.f); if (f) f.live = Math.max(0, f.live - 1); S.ver++; }
+  }
+  const decay = Math.exp(-dm * 60 / (7 * DAY));
+  for (const f of S.fac) f.rv *= decay;
+  if (Math.floor(S.t / HOUR) !== Math.floor(t0 / HOUR)) {
+    S.coins = S.coins.filter(c => c.alive || c.grad || c.t0 > S.t - 10 * HOUR || fById.get(c.f)?.user);
+    for (const f of S.fac) if (f.list && !f.user) f.list.price = r50(fair(f, f.list.share) * f.list.k);
+  }
+}
+function advance(minutes){ while (minutes > 0) { const d = Math.min(5, minutes); step(d); minutes -= d; } }
+function newWorld(){
+  S = { v: 1, t: CFG.START_T - 2 * DAY, speed: 60, fac: [], svc: [], coins: [], feed: [], burned: 0, burnSol: 0, ops: 0, made: 0, svcUn: 0, wal: { sol: 30, asm: 200000 }, nextCoin: 1, nextSvc: 1, ver: 0 };
+  fById = new Map(); svcById = new Map();
+  const r = mulberry(83);
+  for (let i = 0; i < 38; i++) addOther(r);
+  advance(2 * 24 * 60);
+  S.feed = S.feed.slice(0, 40);
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function load(){
+  try { const raw = localStorage.getItem(KEY); if (raw) { const s = JSON.parse(raw); if (s && s.v === 1 && Array.isArray(s.fac)) { S = s; reindex(); return; } } } catch (e) {}
+  newWorld();
+}
+
+/* ---------- wallet (Wallet Standard + injected providers, validated with @solana/web3.js) ---------- */
+const W = { list: [], addr: null, name: null, entry: null, kind: null, balance: null };
+const isMine = f => !!(f && f.user && W.addr && f.owner === W.addr);
+const isRenting = f => !!(f && f.rent && f.rent.user && W.addr && f.rent.who === W.addr);
+function addWallet(x){ if (!W.list.some(w => w.name.toLowerCase() === x.name.toLowerCase())) W.list.push(x); }
+const wsApi = { register: (...ws) => { ws.forEach(w => { try { if (w.features && w.features['standard:connect'] && (w.chains || []).some(c => String(c).startsWith('solana:'))) addWallet({ name: w.name, icon: w.icon, kind: 'standard', w }); } catch (e) {} }); return () => {}; } };
+try {
+  window.addEventListener('wallet-standard:register-wallet', ev => { try { ev.detail(wsApi); } catch (e) {} });
+  window.dispatchEvent(new CustomEvent('wallet-standard:app-ready', { detail: wsApi }));
+} catch (e) {}
+function detectInjected(){
+  const c = [['Phantom', window.phantom && window.phantom.solana], ['Solflare', window.solflare], ['Backpack', window.backpack], ['Solana wallet', window.solana]];
+  for (const [n, p] of c) {
+    if (!p || typeof p.connect !== 'function') continue;
+    const name = p.isPhantom ? 'Phantom' : p.isSolflare ? 'Solflare' : n;
+    if (!W.list.some(w => w.name.toLowerCase().startsWith(name.toLowerCase()))) addWallet({ name, icon: null, kind: 'injected', p });
+  }
+}
+function validAddr(a){
+  try { if (window.solanaWeb3 && solanaWeb3.PublicKey) return new solanaWeb3.PublicKey(a).toBase58(); } catch (e) { return null; }
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a) ? a : null;
+}
+async function connectEntry(entry, silent){
+  let addr = null;
+  if (entry.kind === 'standard') {
+    const w = entry.w;
+    if (silent) { if (w.accounts && w.accounts.length) addr = w.accounts[0].address; else return false; }
+    else { const r = await w.features['standard:connect'].connect(); const acc = (r && r.accounts && r.accounts.length ? r.accounts : w.accounts)[0]; addr = acc && acc.address; }
+    try { w.features['standard:events'] && w.features['standard:events'].on('change', ({ accounts }) => { if (accounts && accounts.length) setWallet(accounts[0].address, entry); else clearWallet(); }); } catch (e) {}
+  } else {
+    const p = entry.p;
+    const r = await p.connect(silent ? { onlyIfTrusted: true } : undefined);
+    const pk = (r && r.publicKey) || p.publicKey; addr = pk && pk.toString();
+    try { p.on && p.on('accountChanged', pk => { if (pk) setWallet(pk.toString(), entry); else clearWallet(); }); } catch (e) {}
+  }
+  if (!addr) throw new Error('The wallet returned no account.');
+  setWallet(addr, entry);
+  return true;
+}
+function setWallet(addr, entry){
+  const ok = validAddr(addr);
+  if (!ok) { toast('That wallet returned an invalid Solana address.'); return; }
+  W.addr = ok; W.name = entry ? entry.name : 'Guest wallet'; W.entry = entry || null; W.kind = entry ? entry.kind : 'guest'; W.balance = null;
+  try { localStorage.setItem(KEYW, JSON.stringify({ name: W.name, kind: W.kind, addr: W.kind === 'guest' ? W.addr : null })); } catch (e) {}
+  for (const f of S.fac) { if (f.user) f.owner = W.addr; if (f.rent && f.rent.user) f.rent.who = W.addr; }
+  paintWallet(); S.ver++; render(true);
+  if (W.kind !== 'guest') fetchBalance();
+}
+async function fetchBalance(){
+  if (!window.solanaWeb3 || !W.addr) return;
+  try {
+    const conn = new solanaWeb3.Connection(CFG.RPC, 'confirmed');
+    const lamports = await Promise.race([conn.getBalance(new solanaWeb3.PublicKey(W.addr)), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))]);
+    W.balance = lamports / solanaWeb3.LAMPORTS_PER_SOL;
+  } catch (e) { W.balance = 'unavailable'; }
+  paintWallet();
+}
+async function clearWallet(){
+  const e = W.entry;
+  try { if (e && e.kind === 'standard' && e.w.features['standard:disconnect']) await e.w.features['standard:disconnect'].disconnect(); if (e && e.kind === 'injected' && e.p.disconnect) await e.p.disconnect(); } catch (err) {}
+  Object.assign(W, { addr: null, name: null, entry: null, kind: null, balance: null });
+  try { localStorage.removeItem(KEYW); } catch (err) {}
+  $('#walletMenu').hidden = true; paintWallet(); S.ver++; render(true);
+}
+function paintWallet(){
+  const b = $('#walletBtn');
+  if (W.addr) { b.className = 'btn connected'; b.innerHTML = `<i class="dot"></i><span>${short(W.addr)}</span>`; b.setAttribute('aria-label', `Wallet ${W.addr}, open menu`); }
+  else { b.className = 'btn amb'; b.innerHTML = `<i class="dot"></i><span>Connect wallet</span>`; b.setAttribute('aria-label', 'Connect wallet'); }
+  if (W.addr) {
+    const bal = W.kind === 'guest' ? fmtSol(S.wal.sol) + ' SOL' : W.balance == null ? 'Checking…' : W.balance === 'unavailable' ? 'Unavailable' : fmtSol(W.balance) + ' SOL';
+    $('#walletMenu').innerHTML = `<div class="rows"><div><label>Wallet</label><b>${esc(W.name)}</b></div><div><label>Address</label><b>${short(W.addr)}</b></div><div><label>Balance</label><b>${bal}</b></div><div><label>$ASSEMBLE</label><b>${fmtTok(S.wal.asm)}</b></div></div>
+      <div class="mitems"><button data-act="copyAddr">Copy address</button>${W.kind !== 'guest' ? `<a href="https://solscan.io/account/${W.addr}" target="_blank" rel="noopener">View on Solscan</a>` : ''}<button data-act="disconnect">Disconnect</button></div>`;
+  }
+}
+function openWalletModal(){
+  detectInjected();
+  const items = W.list.map((w, i) => `<button class="wopt" data-act="pickWallet" data-i="${i}">${w.icon ? `<img src="${esc(w.icon)}" alt="">` : `<span class="ph-ico"></span>`}<span>${esc(w.name)}</span><em>Detected</em></button>`).join('');
+  modal(`<section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="wt">
+    <h2 class="ph" id="wt">${ICO.mine} Connect a Solana wallet <button class="x" data-act="close" aria-label="Close">×</button></h2>
+    <div class="wlist">
+      ${items || `<p class="small" style="margin:0">No Solana wallet found in this browser. Install one, then reload this page.</p>
+        <a class="wopt" href="https://phantom.app/download" target="_blank" rel="noopener"><span class="ph-ico"></span>Get Phantom</a>
+        <a class="wopt" href="https://solflare.com/download" target="_blank" rel="noopener"><span class="ph-ico"></span>Get Solflare</a>
+        <a class="wopt" href="https://backpack.app/downloads" target="_blank" rel="noopener"><span class="ph-ico"></span>Get Backpack</a>`}
+      <button class="wopt" data-act="guestWallet"><span class="ph-ico" style="background:var(--amb)"></span><span>Continue as guest</span></button>
+      <p class="small" style="margin:4px 0 0">Connecting shares your public address only.</p>
+    </div></section>`);
+}
+async function eagerConnect(){
+  let saved = null; try { saved = JSON.parse(localStorage.getItem(KEYW) || 'null'); } catch (e) {}
+  if (!saved) return;
+  if (saved.kind === 'guest' && saved.addr) { setWallet(saved.addr, null); return; }
+  detectInjected();
+  const entry = W.list.find(w => w.name === saved.name);
+  if (entry) { try { await connectEntry(entry, true); } catch (e) {} }
+}
+
+/* ---------- pictures ---------- */
+function faSVG(f){
+  const live = f.live > 0;
+  let s = `<svg class="fa" viewBox="0 0 80 58" shape-rendering="crispEdges" role="img" aria-label="Factory #${f.id}, ${f.live} coins live">`;
+  s += `<use href="#aW" class="hull"/><use href="#aY" class="${live ? 'ambf' : 'idle'}"/><use href="#aV" class="${live ? 'ambf' : 'idle'}"/>`;
+  MODS.forEach((M, i) => { for (let l = 0; l < 5; l++) s += `<rect x="${i * 16 + l * 3.1}" y="52" width="2.4" height="5" class="${l < (f.m ? f.m[M.k] : 0) ? 'mon' : 'mbar'}"/>`; });
+  return s + '</svg>';
+}
+function lineSVG(){
+  const Wd = 340, H = 122, BELT = 86, ST = [44, 98, 152, 206, 260];
+  let s = `<svg class="line" viewBox="0 0 ${Wd} ${H}" shape-rendering="crispEdges" role="img" aria-label="The assembly line: five stations build coins that ride the conveyor and ship at the end of the line.">`;
+  s += `<rect x="0" y="${BELT + 14}" width="${Wd}" height="${H - BELT - 14}" class="floor"/>`;
+  for (let x = 0; x < Wd; x += 16) s += `<rect x="${x}" y="${H - 6}" width="8" height="6" class="am" opacity=".9"/>`;
+  const counts = { research: S.made * 3, design: S.made, assembly: S.made, marketing: S.coins.filter(c => c.alive).length, packaging: S.coins.filter(c => c.grad).length };
+  const sub = { research: 'narratives', design: 'brands', assembly: 'deployed', marketing: 'promoting', packaging: 'graduated' };
+  MODS.forEach((M, i) => {
+    const x = ST[i];
+    s += `<rect x="${x - 14}" y="${BELT - 34}" width="28" height="2" class="st"/><rect x="${x - 14}" y="${BELT - 34}" width="2" height="34" class="st"/><rect x="${x + 12}" y="${BELT - 34}" width="2" height="34" class="st"/>`;
+    s += `<g class="pix" transform="translate(${x - 9} ${BELT - 30}) scale(2)">${MICO[M.k].replace(/<\/?svg[^>]*>/g, '')}</g>`;
+    s += `<rect x="${x - 1}" y="${BELT - 12}" width="2" height="6" class="am"/>`;
+    s += `<text class="lbl" x="${x}" y="${BELT - 40}" text-anchor="middle">${M.short.toUpperCase()}</text><text class="cnt" x="${x}" y="${BELT - 46}" text-anchor="middle">${counts[M.k]} ${sub[M.k]}</text>`;
+  });
+  s += `<rect x="8" y="${BELT}" width="296" height="2" class="st"/><rect x="8" y="${BELT + 12}" width="296" height="2" class="st"/><rect x="6" y="${BELT + 2}" width="2" height="10" class="st"/><rect x="304" y="${BELT + 2}" width="2" height="10" class="st"/><rect x="8" y="${BELT + 2}" width="296" height="10" class="beltf"/>`;
+  for (let x = 16; x < 300; x += 20) s += `<g class="roll"><rect x="${x}" y="${BELT + 5}" width="4" height="4" class="am"/></g>`;
+  for (let i = 0; i < 6; i++) s += `<g class="box" style="animation-delay:${-i * 16 / 6}s"><rect x="14" y="${BELT - 8}" width="12" height="8" class="st"/><rect x="16" y="${BELT - 6}" width="8" height="3" class="am"/></g>`;
+  const shipped = S.coins.slice(-8).reverse();
+  shipped.forEach((c, i) => {
+    const col = i % 2, row = Math.floor(i / 2), x = 310 + col * 14 - (row % 2) * 4, y = BELT + 4 - row * 11;
+    s += `<g class="crate"><title>$${esc(c.tick)}, factory #${c.f} (${c.grad ? 'graduated' : c.alive ? 'trading' : 'quiet'})</title><rect x="${x}" y="${y}" width="13" height="10" class="${c.alive ? 'am' : 'mu'}"/><rect x="${x}" y="${y}" width="13" height="1" class="st"/><rect x="${x}" y="${y + 9}" width="13" height="1" class="st"/></g>`;
+  });
+  s += `<text class="lbl" x="322" y="${BELT + 24}" text-anchor="middle">SHIPPED</text>`;
+  return s + '</svg>';
+}
+
+/* ---------- views ---------- */
+const TABS = [['floor','Factory floor',ICO.floor],['build','Build',MINI],['mine','My factories',ICO.mine],['network','Network',ICO.net],['rentals','Rentals',ICO.rent],['how','How it works',ICO.how],['docs','Docs',ICO.docs]];
+let tab = 'floor';
+const M = { sort: 'value', dur: 1, mod: 'all' };
+const LST = { id: 0, share: 0.7, mult: 1 };
+const OFFER = { f: 0, k: '', fee: 0.04 };
+
+const myF = () => W.addr ? S.fac.filter(isMine) : [];
+const myRent = () => W.addr ? S.fac.filter(isRenting) : [];
+const unTotal = () => myF().reduce((a, f) => a + f.unclaimed, 0) + myRent().reduce((a, f) => a + f.rentUn, 0) + (W.addr ? S.svcUn : 0);
+const LIVE = {
+  burned: () => fmtTok(S.burned),
+  live: () => String(S.coins.filter(c => c.alive).length),
+  un: id => fmtSol(fById.get(+id)?.unclaimed) + ' SOL',
+  own: id => fmtSol(fById.get(+id)?.own) + ' SOL',
+  rentUn: id => fmtSol(fById.get(+id)?.rentUn) + ' SOL',
+  svc: id => fmtSol(svcById.get(+id)?.earned) + ' SOL',
+  myUn: () => fmtSol(unTotal()) + ' SOL',
+  claimAll: () => 'Collect all · ' + fmtSol(unTotal()) + ' SOL',
+  ago: t => ago(+t),
+  left: t => left(+t)
+};
+function kv(label, val, k){ return `<div><label>${label}</label><b${k ? ` data-k="${k}"` : ''}>${val}</b></div>`; }
+
+let latestSnap = null, latestAt = 0;
+function vFloor(){
+  const n = S.fac.length, nn = Math.min(n + 1, CFG.SUPPLY), on = Math.round(n / CFG.SUPPLY * 50);
+  const nowR = performance.now();
+  if (!latestSnap || nowR - latestAt > 30000) { latestSnap = S.feed.filter(f => f.k === 'make').slice(0, 6); latestAt = nowR; }
+  return `<div class="grid-hero"><div class="col">
+  <section class="panel">
+    <h2 class="ph">${ICO.floor} Status <small>the plant right now</small></h2>
+    <div class="pad">
+      <label>Factories built</label>
+      <div class="big"><b>${n}</b><span>/ ${CFG.SUPPLY.toLocaleString('en-US')}</span></div>
+      <div class="ticks" aria-hidden="true">${Array.from({ length: 50 }, (_, i) => `<i class="${i < on ? 'on' : ''}${i === on - 1 ? ' last' : ''}"></i>`).join('')}</div>
+      <div class="kv4">
+        ${kv('Build price', n >= CFG.SUPPLY ? 'Sold out' : fmtSol(mintPrice(nn)) + ' SOL')}
+        ${kv('Coins trading', S.coins.filter(c => c.alive).length, 'live')}
+        ${kv('Network lines', S.svc.filter(s => s.active).length)}
+        ${kv('$ASSEMBLE burned', fmtTok(S.burned), 'burned')}
+      </div>
+      <button class="btn amb wide" data-go="build">Build a factory</button>
+    </div>
+  </section>
+  <section class="panel">
+    <h2 class="ph">${ICO.coin} $ASSEMBLE <small>token</small></h2>
+    <div class="kv2"><div><label>Project</label><b>Assemble</b></div><div><label>Ticker</label><b>$ASSEMBLE</b></div></div>
+    ${CFG.X ? `<div class="btnrow"><a class="btn" href="${esc(CFG.X)}" target="_blank" rel="noopener">Follow @AssembleDotRent on X</a></div>` : ''}
+  </section>
+  </div>
+  <section class="panel hero">
+    <div class="hz" aria-hidden="true"></div>
+    <h2 class="ph">${ICO.floor} The line <small>every coin passes through five stations</small></h2>
+    <div class="hero-copy">
+      <h1>Build factories. Assemble tokens. <em>Manufacture revenue.</em></h1>
+      <p>Each factory is an NFT running an AI assembly line. Its machines research a narrative, design the brand, deploy the coin on pump.fun, promote it and prepare it for launch, then route the creator fees back to the factory.</p>
+    </div>
+    <div class="linewrap">${lineSVG()}</div>
+    <div class="legend">
+      <span><i style="background:var(--amb)"></i>Shipped, trading</span>
+      <span><i style="background:var(--mute)"></i>Shipped, gone quiet</span>
+      <span>${S.made} coins manufactured</span>
+    </div>
+  </section>
+  </div>
+  <section class="panel mt">
+    <h2 class="ph">${ICO.docs} Latest shipments <small>coins the lines just launched</small><button class="link end" data-go="network">Production network</button></h2>
+    ${latestSnap.length ? `<div class="feed">${latestSnap.map(x => { const f = fById.get(x.f); return `<div>${f ? faSVG(f) : ''}<b>$${esc(x.tick)}</b><p>Factory #${x.f}</p><span class="ago" data-k="ago:${x.t}">${ago(x.t)}</span></div>`; }).join('')}</div>`
+      : `<div class="empty">${MINI}<span>Nothing shipped yet.</span></div>`}
+  </section>
+  <section class="panel mt">
+    <h2 class="ph">${ICO.how} How it works <small>five steps</small><button class="link end" data-go="how">All the rules</button></h2>
+    ${stepsHTML()}
+  </section>`;
+}
+function stepsHTML(){
+  const st = [
+    [MINI, 'Build a factory', 'Buy a virtual factory, a tradable NFT that comes with a research station and an assembly robot.'],
+    [MICO.design, 'Deploy robots', 'Install AI machines for each stage of production: research, design, assembly, marketing and packaging.'],
+    [MICO.assembly, 'Manufacture tokens', 'The line researches a narrative, brands it, deploys the contract and launches the coin on pump.fun.'],
+    [ICO.coin, 'Collect revenue', '60% of each coin’s creator fees routes back to its factory.'],
+    [ICO.net, 'Expand production', 'Reinvest in machines, rent out your line, or sell your best machine’s output to the network.']
+  ];
+  return `<div class="steps">${st.map((x, i) => `<div>${x[0]}<span class="n">${pad2(i + 1)}</span><h3>${x[1]}</h3><p>${x[2]}</p></div>`).join('')}</div>`;
+}
+
+function vBuild(){
+  const n = S.fac.length + 1, fee = mintPrice(n), soldOut = n > CFG.SUPPLY, can = W.addr && !soldOut && S.wal.sol >= fee;
+  return `<div class="grid-2"><div class="col">
+  <section class="panel step">
+    <h2 class="ph"><b>The line</b> <small>five machines, installed one at a time</small></h2>
+    <div class="pad"><h3>What a factory runs</h3>
+      <p>Every factory ships with a level 1 research station and assembly robot. Add and upgrade the rest whenever you like, or contract them from another factory on the network.</p>
+      <div class="mods">${MODS.map(Md => `<div>${MICO[Md.k]}<b>${Md.name}</b><span>${Md.fn}</span><em>${Md.eff}</em></div>`).join('')}</div>
+      <p class="note">Better machines raise a factory’s odds, not its guarantees. Each coin is still its own bet.</p>
+    </div>
+  </section>
+  <section class="panel step">
+    <h2 class="ph"><b>Build</b> <small>${fmtSol(fee)} SOL</small><span class="tag amb end">Now</span></h2>
+    <div class="pad"><h3>${soldOut ? 'All 1,000 factories are built' : `Build factory #${n}`}</h3>
+      <p>${soldOut ? 'Factories now change hands on Tensor and Magic Eden, or you can rent one.' : 'Half the build price buys and burns $ASSEMBLE, half funds operations. The line starts producing as soon as it’s built.'}</p>
+      ${!W.addr ? `<button class="btn dark" data-act="wallet">Connect wallet to build</button>`
+        : `<button class="btn dark" data-act="build" ${can ? '' : 'disabled'}>Build factory #${n}</button>${S.wal.sol < fee ? `<p class="warn" style="margin:12px 0 0">Not enough SOL in your wallet.</p>` : ''}`}
+    </div>
+  </section></div>
+  <aside class="col">
+    <section class="panel"><h2 class="ph">${MINI} You get <small>after building</small></h2>
+      <div class="youget"><div class="frame">${faSVG({ id: n, live: 1, m: { research: 1, design: 0, assembly: 1, marketing: 0, packaging: 0 } })}</div><div><b>#${Math.min(n, CFG.SUPPLY)}</b><span>1 production line<br>Research and Assembly installed</span></div></div>
+    </section>
+    <section class="panel"><h2 class="ph">${ICO.coin} Summary <small>what moves</small></h2>
+      <div class="rows">
+        ${kv('Build price', fmtSol(fee) + ' SOL')}
+        ${kv('Machines included', 'Research 1, Assembly 1')}
+        ${kv('Your share of fees', '60%')}
+        ${kv('Wallet SOL', fmtSol(S.wal.sol) + ' SOL')}
+        ${kv('Wallet $ASSEMBLE', fmtTok(S.wal.asm))}
+      </div>
+    </section>
+  </aside></div>`;
+}
+
+function modCell(f, Md){
+  const own = f.m[Md.k], s = svcOf(f, Md.k), sl = s ? fById.get(s.f).m[Md.k] : 0, cost = own === 0 ? CFG.INSTALL : upCost(own), max = own >= CFG.MAX_LVL;
+  const mine = S.svc.find(x => x.f === f.id && x.k === Md.k && x.active);
+  return `<div><span class="mh">${MICO[Md.k]}<b>${Md.short}</b></span>
+    <span class="pips" aria-label="Level ${own} of 5">${Array.from({ length: 5 }, (_, i) => `<i class="${i < own ? 'on' : ''}"></i>`).join('')}</span>
+    <small>${own ? 'Level ' + own : 'Not installed'}${s ? ` · running at ${sl} via network` : ''}</small>
+    ${mine ? `<span class="net">Offered to network at ${mine.fee * 100}%</span>` : ''}
+    <div class="btns">
+      <button class="btn sm amb" data-act="upMod" data-id="${f.id}" data-k="${Md.k}" ${max || S.wal.asm < cost ? 'disabled' : ''}>${max ? 'Maxed' : (own ? 'Upgrade · ' : 'Install · ') + fmtTok(cost)}</button>
+      ${s ? `<button class="btn sm" data-act="release" data-id="${f.id}" data-k="${Md.k}">Release</button>` : `<button class="btn sm" data-act="contractOpen" data-id="${f.id}" data-k="${Md.k}">Contract</button>`}
+      ${mine ? `<button class="btn sm" data-act="unoffer" data-s="${mine.id}">Stop offering</button>` : own >= 2 ? `<button class="btn sm" data-act="offerOpen" data-id="${f.id}" data-k="${Md.k}">Offer</button>` : ''}
+    </div></div>`;
+}
+function vMine(){
+  if (!W.addr) return `<section class="panel"><h2 class="ph">${ICO.mine} My factories</h2>
+    <div class="empty">${MINI}<span>Connect a wallet to see your factories and collect their revenue.</span><button class="btn amb" data-act="wallet">Connect wallet</button></div></section>`;
+  const mine = myF(), rented = myRent();
+  return `<section class="panel"><h2 class="ph">${ICO.mine} My factories <small>revenue waits until you collect it</small></h2>
+    <div class="kv5">
+      <div><label>Factories</label><b>${mine.length}</b></div>
+      <div><label>Rented</label><b>${rented.length}</b></div>
+      <div><label>Machines</label><b>${mine.reduce((a, f) => a + MODS.filter(Md => f.m[Md.k]).length, 0)}</b></div>
+      <div><label>Ready to collect</label><b class="g" data-k="myUn">${LIVE.myUn()}</b></div>
+      <div><label>$ASSEMBLE</label><b>${fmtTok(S.wal.asm)}</b></div>
+    </div>
+    <div class="actions">
+      <button class="btn amb" data-act="claimAll" data-k="claimAll">${LIVE.claimAll()}</button>
+      <button class="btn" data-go="build">Build a factory</button>
+      <button class="btn" data-go="network">Network</button>
+      <button class="btn" data-act="buyAsm" ${S.wal.sol < 1 ? 'disabled' : ''}>Swap 1 SOL for $ASSEMBLE</button>
+    </div>
+  </section>
+  ${rented.length ? `<section class="panel mt"><h2 class="ph">${ICO.rent} Rented by you <small>your share settles when the rental ends</small></h2>
+    ${rented.map(f => `<div class="frow"><div class="fhead"><div>${faSVG(f)}</div><div><h3>#${f.id}</h3>
+      <div class="stats"><div><label>Time left</label><b data-k="left:${f.rent.until}">${left(f.rent.until)}</b></div><div><label>You keep</label><b>${Math.round(f.rent.share * 100)}%</b></div><div><label>Your revenue</label><b data-k="rentUn:${f.id}">${LIVE.rentUn(f.id)}</b></div><div><label>Lines running</label><b>${f.live} / ${capOf(f)}</b></div></div></div>
+      <div><p class="small" style="margin:0">Owner ${short(f.owner)} keeps the rest of the operator share and the rental payment.</p></div></div></div>`).join('')}
+  </section>` : ''}
+  <section class="panel mt"><h2 class="ph">${MINI} Your factories <small>${mine.length}</small></h2>
+    ${mine.length ? mine.map(f => `<div class="frow"><div class="fhead">
+      <div>${faSVG(f)}</div>
+      <div><h3>#${f.id}</h3>
+        <div class="stats"><div><label>Lines running</label><b>${f.live} / ${capOf(f)}</b></div><div><label>Coins made</label><b>${f.count}</b></div><div><label>Ready to collect</label><b data-k="un:${f.id}">${LIVE.un(f.id)}</b></div><div><label>Collected so far</label><b data-k="own:${f.id}">${LIVE.own(f.id)}</b></div></div>
+        <div class="btns"><button class="btn sm amb" data-act="claim" data-id="${f.id}">Collect</button></div>
+      </div>
+      <div><div class="rentbox">${f.rent ? `<b>Rented out</b><p>To ${short(f.rent.who)} for ${left(f.rent.until)} more. They keep ${Math.round(f.rent.share * 100)}% of the operator share.</p>`
+        : f.list ? `<b>Listed for rent</b><p>${fmtTok(f.list.price)} $ASSEMBLE an hour, renter keeps ${Math.round(f.list.share * 100)}%.</p><div class="btns"><button class="btn sm" data-act="listOpen" data-id="${f.id}">Edit</button><button class="btn sm" data-act="unlist" data-id="${f.id}">Unlist</button></div>`
+        : `<b>Not listed</b><p>Rent the whole line to another operator for $ASSEMBLE and a share of creator fees.</p><button class="btn sm amb" data-act="listOpen" data-id="${f.id}">List for rent</button>`}</div></div>
+      </div>
+      <div class="modrow">${MODS.map(Md => modCell(f, Md)).join('')}</div></div>`).join('')
+      : `<div class="empty">${MINI}<span>None yet. Build one and its line starts running.</span><button class="btn sm amb" data-go="build">Build a factory</button></div>`}
+  </section>`;
+}
+
+function vNetwork(){
+  let list = S.svc.filter(s => s.active);
+  if (M.mod !== 'all') list = list.filter(s => s.k === M.mod);
+  const users = s => S.fac.filter(f => f.c[s.k] === s.id).length;
+  list.sort((a, b) => fById.get(b.f).m[b.k] - fById.get(a.f).m[a.k] || a.fee - b.fee);
+  const segb = (val, label) => `<button class="chip" data-act="mf" data-val="${val}" aria-pressed="${M.mod === val}">${label}</button>`;
+  const mineS = W.addr ? S.svc.filter(s => s.active && isMine(fById.get(s.f))) : [];
+  return `<section class="panel"><h2 class="ph">${ICO.net} Production network <small>mass production across factories</small></h2>
+    <div class="pbody"><p>Factories can specialise. Offer your strongest machine to the network and other factories can contract it: their coins run through your machine’s level, and you earn a fee on every coin it helps make. Contract a better machine than your own and your line runs at its level.</p></div>
+    <div class="kv5" style="border-top:1px solid var(--rule)">
+      <div><label>Lines offered</label><b>${S.svc.filter(s => s.active).length}</b></div>
+      <div><label>Contracts running</label><b>${S.fac.reduce((a, f) => a + Object.values(f.c).filter(id => svcById.get(id)?.active).length, 0)}</b></div>
+      <div><label>Your lines</label><b>${mineS.length}</b></div>
+      <div><label>Factories using yours</label><b>${mineS.reduce((a, s) => a + users(s), 0)}</b></div>
+      <div><label>Your network fees</label><b class="g">${fmtSol(S.svcUn)} SOL</b></div>
+    </div>
+  </section>
+  <section class="panel mt"><h2 class="ph">${ICO.floor} Machines on the network <small>${list.length} offered</small></h2>
+    <div class="filters"><div class="seg"><span>Machine</span>${segb('all','All')}${MODS.map(Md => segb(Md.k, Md.short)).join('')}</div></div>
+    ${list.length ? `<div class="svcs">${list.map(s => { const fa = fById.get(s.f), Md = MODS.find(x => x.k === s.k), mineSv = isMine(fa);
+      return `<div class="svc"><div class="mh">${MICO[s.k]}<h4>${Md.short} ${fa.m[s.k]}</h4>${mineSv ? '<span class="tag amb">Yours</span>' : ''}</div>
+        <dl><dt>From</dt><dd>Factory #${fa.id}</dd><dt>Fee</dt><dd>${s.fee * 100}% of creator fees</dd><dt>Factories using it</dt><dd>${users(s)}</dd><dt>Earned</dt><dd data-k="svc:${s.id}">${LIVE.svc(s.id)}</dd></dl>
+        <p class="small" style="margin:0">${Md.eff}.</p></div>`; }).join('')}</div>` : `<div class="empty">${MINI}<span>No machines of this type on the network yet.</span></div>`}
+  </section>`;
+}
+
+function vRentals(){
+  const d = DURS[M.dur];
+  const list = S.fac.filter(f => f.list);
+  const sorters = { value: (a, b) => (b.list.share * hourly(b) / b.list.price) - (a.list.share * hourly(a) / a.list.price), price: (a, b) => a.list.price - b.list.price, rev: (a, b) => hourly(b) - hourly(a), lines: (a, b) => capOf(b) - capOf(a) };
+  list.sort((a, b) => (!!a.rent - !!b.rent) || sorters[M.sort](a, b));
+  const segb = (key, val, label) => `<button class="chip" data-act="m" data-key="${key}" data-val="${val}" aria-pressed="${String(M[key]) === String(val)}">${label}</button>`;
+  return `<section class="panel"><h2 class="ph">${ICO.rent} Factories for rent <small>${list.length} listed · manufacture without owning infrastructure</small></h2>
+    <div class="filters">
+      <div class="seg"><span>Rent for</span>${DURS.map((x, i) => segb('dur', i, x.name + (x.off ? ` (−${x.off * 100}%)` : ''))).join('')}</div>
+      <div class="seg"><span>Sort</span>${segb('sort','value','Best value')}${segb('sort','rev','Revenue')}${segb('sort','lines','Most lines')}${segb('sort','price','Price')}</div>
+    </div>
+    ${list.length ? `<div class="lists">${list.map(f => { const cost = f.list.price * d.h * (1 - d.off), mine = isMine(f);
+      return `<div class="lcard">${faSVG(f)}<div><h4>#${f.id}${mine ? '<span class="tag amb">Yours</span>' : ''}</h4>
+        <dl><dt>Production lines</dt><dd>${capOf(f)}</dd><dt>Machines</dt><dd>${MODS.map(Md => lvl(f, Md.k)).join(' · ')}</dd><dt>Revenue</dt><dd>${fmtSol(hourly(f))} SOL/h</dd><dt>Renter share</dt><dd>${Math.round(f.list.share * 100)}%</dd><dt>Price</dt><dd>${fmtTok(f.list.price)} /h</dd></dl>
+        ${f.rent ? `<button class="btn sm" disabled>Rented, back in ${left(f.rent.until)}</button>` : mine ? `<button class="btn sm" data-go="mine">Manage listing</button>`
+          : !W.addr ? `<button class="btn sm" data-act="wallet">Connect wallet</button>`
+          : `<button class="btn sm amb" data-act="rent" data-id="${f.id}" ${S.wal.asm < cost ? 'disabled' : ''}>Rent ${d.name} · ${fmtTok(cost)}</button>`}
+      </div></div>`; }).join('')}</div>` : `<div class="empty">${MINI}<span>No factories listed right now.</span></div>`}
+    <p class="small" style="margin:0;padding:12px 18px;border-top:1px solid var(--rule)">Machine levels shown as research · design · assembly · marketing · packaging, including any network contracts.</p>
+  </section>`;
+}
+function listModal(id){
+  const f = fById.get(+id); if (!isMine(f)) return;
+  if (LST.id !== f.id) { LST.id = f.id; LST.share = f.list ? f.list.share : 0.7; LST.mult = 1; }
+  const p = r50(fair(f, LST.share) * LST.mult);
+  modal(`<section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="lt">
+    <h2 class="ph" id="lt">${ICO.rent} List factory #${f.id} for rent <button class="x" data-act="close" aria-label="Close">×</button></h2>
+    <div class="pad">
+      <label>Renter keeps</label>
+      <div class="seg" style="margin-bottom:16px">${[0.5,0.6,0.7,0.8].map(s => `<button class="chip" data-act="lsShare" data-v="${s}" aria-pressed="${LST.share === s}">${s * 100}%</button>`).join('')}</div>
+      <label>Hourly price</label>
+      <div class="seg" style="margin-bottom:16px">${[[0.8,'Fill fast'],[1,'Suggested'],[1.3,'Premium']].map(([m, t]) => `<button class="chip" data-act="lsMult" data-v="${m}" aria-pressed="${LST.mult === m}">${t}</button>`).join('')}</div>
+      <div class="rows" style="border:1px solid var(--rule);margin-bottom:16px">
+        ${kv('Price per hour', fmtTok(p) + ' $ASSEMBLE')}
+        ${kv('Per day / week', `${fmtTok(p * 24 * 0.9)} / ${fmtTok(p * 168 * 0.75)}`)}
+        ${kv('You receive', '90% of each payment, plus your fee share')}
+        ${kv('Burned', '10% of each payment')}
+      </div>
+      <button class="btn amb wide" data-act="listSave" data-id="${f.id}" data-p="${p}">${f.list ? 'Update listing' : 'List factory #' + f.id}</button>
+    </div></section>`);
+}
+function contractModal(id, k){
+  const f = fById.get(+id); if (!isMine(f)) return;
+  const Md = MODS.find(x => x.k === k);
+  const opts = S.svc.filter(s => s.active && s.k === k && s.f !== f.id && fById.get(s.f).m[k] > f.m[k]).sort((a, b) => fById.get(b.f).m[k] - fById.get(a.f).m[k] || a.fee - b.fee);
+  modal(`<section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="ct">
+    <h2 class="ph" id="ct">${MICO[k]} Contract a ${Md.short.toLowerCase()} machine <button class="x" data-act="close" aria-label="Close">×</button></h2>
+    <div class="pad"><p class="small" style="margin:0 0 14px">Your line runs at the contracted machine’s level for this stage. Its owner takes the fee from the creator fees of every coin your factory makes while the contract runs. Release it any time.</p>
+      ${opts.length ? `<div class="wlist" style="padding:0">${opts.map(s => `<button class="wopt" data-act="contract" data-id="${f.id}" data-s="${s.id}"><span>${Md.short} level ${fById.get(s.f).m[k]} · factory #${s.f}</span><em>${s.fee * 100}% fee</em></button>`).join('')}</div>`
+        : `<p class="small" style="margin:0">No machine on the network beats your level ${f.m[k]} ${Md.short.toLowerCase()} right now.</p>`}
+    </div></section>`);
+}
+function offerModal(id, k){
+  const f = fById.get(+id); if (!isMine(f)) return;
+  OFFER.f = f.id; OFFER.k = k;
+  const Md = MODS.find(x => x.k === k);
+  modal(`<section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="ot">
+    <h2 class="ph" id="ot">${MICO[k]} Offer your ${Md.short.toLowerCase()} ${f.m[k]} to the network <button class="x" data-act="close" aria-label="Close">×</button></h2>
+    <div class="pad"><p class="small" style="margin:0 0 14px">Factories with a weaker ${Md.short.toLowerCase()} machine can contract yours. You earn your fee on the creator fees of every coin they make with it. A lower fee attracts more factories.</p>
+      <label>Your fee</label>
+      <div class="seg" style="margin-bottom:16px">${FEES.map(x => `<button class="chip" data-act="ofFee" data-v="${x}" aria-pressed="${OFFER.fee === x}">${x * 100}% of creator fees</button>`).join('')}</div>
+      <button class="btn amb wide" data-act="offerSave">Offer ${Md.short} ${f.m[k]} at ${OFFER.fee * 100}%</button>
+    </div></section>`);
+}
+
+function flywheel(){
+  const L = ['More factories deployed','More assembly lines operating','More coins manufactured','More creator fees','More upgrades and rentals','More $ASSEMBLE spent and burned'];
+  const cx = 380, cy = 180, rx = 290, ry = 135, n = L.length;
+  let s = `<svg viewBox="0 0 760 360" role="img" aria-label="The $ASSEMBLE flywheel"><ellipse class="ringe" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>`;
+  L.forEach((_, i) => { const a = (i + 0.5) / n * 2 * Math.PI - Math.PI / 2, x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a), rot = Math.atan2(ry * Math.cos(a), -rx * Math.sin(a)) * 180 / Math.PI; s += `<path class="arr" d="M -7 -6 L 7 0 L -7 6 Z" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot.toFixed(1)})"/>`; });
+  L.forEach((t, i) => { const a = i / n * 2 * Math.PI - Math.PI / 2, x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a); s += `<g class="node${i === 5 ? ' hot' : ''}"><rect x="${(x - 118).toFixed(1)}" y="${(y - 19).toFixed(1)}" width="236" height="38"/><text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle">${t}</text></g>`; });
+  return s + `</svg><ol>${L.map(t => `<li>${t}</li>`).join('')}</ol>`;
+}
+function vHow(){
+  const sq = Array.from({ length: 100 }, (_, i) => `<i class="${i < 60 ? 'sq-a' : i < 85 ? 'sq-b' : 'sq-c'}"></i>`).join('');
+  return `<section class="panel"><h2 class="ph">${ICO.how} How it works <small>factories manufacture coins</small></h2>${stepsHTML()}</section>
+  <section class="panel mt"><h2 class="ph">${ICO.floor} Modular assembly lines</h2>
+    <div class="tw"><table><thead><tr><th></th><th>Machine</th><th>Function</th><th>Effect</th><th class="r">Cost</th></tr></thead><tbody>
+    ${MODS.map(Md => `<tr><td>${MICO[Md.k]}</td><td><b>${Md.name}</b></td><td>${Md.fn}</td><td>${Md.eff}</td><td class="r">${fmtTok(CFG.INSTALL)} to install, 6k × level to upgrade</td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="note" style="margin:0 18px 18px">Each machine can be bought, upgraded, offered to the network or contracted from it independently, up to level 5. All machine spending is in $ASSEMBLE and burned.</p>
+  </section>
+  <section class="panel mt"><h2 class="ph">${ICO.coin} Where every creator fee goes <small>100 squares, one per percent</small></h2>
+    <div class="split"><div class="squares" aria-hidden="true">${sq}</div></div>
+    <div class="splitkeys">
+      <div><span class="k"><i class="sq-a"></i>The factory</span><b>60%</b><p>Its operator, less any network machine fees. Renters and owners split it at the listed share.</p></div>
+      <div><span class="k"><i class="sq-b"></i>Buy and burn</span><b>25%</b><p>Buys $ASSEMBLE on the market and burns it.</p></div>
+      <div><span class="k"><i class="sq-c"></i>Operations</span><b>15%</b><p>Pays for the AI agents and the keeper.</p></div>
+    </div>
+  </section>
+  <div class="two mt">
+    <section class="panel"><h2 class="ph">${ICO.net} Mass production</h2>
+      <div class="pbody"><p>Factories connect into an industrial production network. An owner with a strong machine can specialise: offer it at a 2%, 4% or 6% fee, and every factory that contracts it pays that share of its coins’ creator fees.</p>
+      <p>A factory that contracts a machine runs at that machine’s level for that stage of production. Contracts can be released at any time.</p></div>
+    </section>
+    <section class="panel"><h2 class="ph">${ICO.rent} Factory rentals</h2>
+      <div class="pbody"><p>Owners rent whole production lines to other operators by the hour, day or week for $ASSEMBLE, and agree on how much of the operator share the renter keeps. 90% of each payment goes to the owner and 10% is burned.</p>
+      <p>Renters manufacture coins without owning infrastructure. Owners collect the rent and their share of creator fees.</p></div>
+    </section>
+  </div>
+  <section class="panel mt"><h2 class="ph">${ICO.coin} The flywheel</h2><div class="fly">${flywheel()}</div></section>`;
+}
+
+const DOCS = [
+  ['overview','Overview', () => `<p>Assemble is a Solana launchpad of token factories. Each <strong>factory</strong> is an NFT running an AI assembly line. Its machines handle every stage of production: researching a narrative, designing the brand, deploying the coin on pump.fun with the factory as creator, promoting it and preparing it for launch. 60% of each coin’s creator fees routes back to the factory.</p>`],
+  ['building','Building', () => `<p>The build price rises evenly from 0.25 SOL for #1 to 1.25 SOL for #1,000: <code>0.25 + 1.0 × (n − 1) / 999</code>. Half buys and burns $ASSEMBLE, half funds operations. Every factory ships with a level 1 research station and assembly robot.</p>
+    <div class="tw"><table><thead><tr><th>Factory</th><th class="r">Build price</th></tr></thead><tbody>${[1,250,500,750,1000].map(n => `<tr><td>#${n.toLocaleString('en-US')}</td><td class="r">${mintPrice(n).toFixed(3)} SOL</td></tr>`).join('')}</tbody></table></div>`],
+  ['machines','Machines', () => `<div class="tw"><table><thead><tr><th>Machine</th><th>Effect per level</th></tr></thead><tbody>${MODS.map(Md => `<tr><td><strong>${Md.name}</strong></td><td>${Md.eff}</td></tr>`).join('')}</tbody></table></div>
+    <p>Installing a machine costs ${fmtTok(CFG.INSTALL)} $ASSEMBLE; each upgrade costs 6,000 × the current level, up to level 5. All of it is burned. The assembly robot’s level is the number of production lines, which is how many coins the factory can have trading at once.</p>
+    <h4>Production rules</h4>
+    <ul><li>No real people’s names or likeness, and no implied endorsement.</li><li>No existing brands, and no ticker that is already live on pump.fun.</li><li>No promises of returns in the coin or its promotional content.</li><li>Every coin description and promotion says which factory made it.</li></ul>`],
+  ['network','Production network', () => `<p>Owners can offer any machine at level 2 or higher to the network at a 2%, 4% or 6% fee. A factory that contracts it runs that stage of production at the offered machine’s level and pays the fee from the creator fees of every coin it makes, out of its operator share. Contracts and offers can be ended at any time.</p>`],
+  ['fees','Fees', () => `<div class="tw"><table><thead><tr><th>To</th><th class="r">Share</th></tr></thead><tbody><tr><td>The factory’s operator, less network machine fees</td><td class="r">60%</td></tr><tr><td>$ASSEMBLE buy and burn</td><td class="r">25%</td></tr><tr><td>Operations</td><td class="r">15%</td></tr></tbody></table></div>`],
+  ['rentals','Rentals', () => `<p>Owners list factories by the hour, day or week, priced in $ASSEMBLE. A day is 10% cheaper per hour, a week 25% cheaper. The owner sets how much of the operator share the renter keeps: 50% to 80%. Each payment settles when the rental starts: 90% to the owner, 10% burned.</p>`],
+  ['token','$ASSEMBLE', () => `<p>$ASSEMBLE is the pad’s token, launched on pump.fun. It pays for machines, upgrades and rentals. 25% of every coin’s creator fees, half of every build and 10% of every rental buy it back or burn it.</p>`],
+  ['faq','FAQ', () => [
+      ['Who is the creator of the coins?','The factory. Its address is set as the coin’s creator on pump.fun, and the fee split is locked in the same transaction.'],
+      ['Should I install machines or contract them?','Installing costs $ASSEMBLE once. Contracting costs a share of fees on every coin. Which is better depends on how much your line produces.'],
+      ['Do better machines guarantee revenue?','No. They improve the odds and the reach of each coin. Most coins still go quiet within days.'],
+      ['What happens when I sell my factory?','Its machines, network offers, unclaimed revenue and any listing go with it. Collect before you sell.']
+    ].map(([q, a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('')],
+  ['risks','Risks', () => `<ul><li>Most coins on pump.fun stop trading within days. A factory whose coins are quiet earns nothing.</li>
+    <li>Machine upgrades and network contracts don’t guarantee profit. Network fee income depends on other factories.</li>
+    <li>Rental demand isn’t guaranteed. A rented factory can earn less than the rent paid.</li>
+    <li>A factory’s market price can fall far below what was paid to build it.</li>
+    <li>pump.fun can change its fee rates or creator fee program at any time.</li>
+    <li>Smart contracts and autonomous agents can have bugs even after testing.</li></ul>
+    <p class="small">Factories, $ASSEMBLE and every coin launched here can go to zero. Nothing on this site is financial advice; only put in what you can afford to lose.</p>`]
+];
+function vDocs(){
+  return `<div class="docs"><nav class="panel toc" aria-label="Docs contents"><h2 class="ph">${ICO.docs} Docs <small>contents</small></h2>
+    <ol>${DOCS.map((d, i) => `<li><button data-act="docjump" data-id="${d[0]}"><span>${pad2(i + 1)}</span>${d[1]}</button></li>`).join('')}</ol></nav>
+    <div class="col">${DOCS.map(d => `<section class="panel doc" id="doc-${d[0]}"><h2 class="ph">${d[1]}</h2><div class="body">${d[2]()}</div></section>`).join('')}</div></div>`;
+}
+
+/* ---------- render ---------- */
+let lastVer = -1, lastTab = '', lastRender = 0;
+const VIEWS = { floor: vFloor, build: vBuild, mine: vMine, network: vNetwork, rentals: vRentals, how: vHow, docs: vDocs };
+function render(force){
+  const now = performance.now();
+  const dynamic = !(tab === 'how' || tab === 'docs');
+  if (!force && tab === lastTab && (!dynamic || S.ver === lastVer || now - lastRender < 1500)) return;
+  lastVer = S.ver; lastTab = tab; lastRender = now;
+  const y = window.scrollY;
+  $('#view').innerHTML = VIEWS[tab]();
+  window.scrollTo(0, y);
+}
+function paintTabs(){ $('#tabs').innerHTML = TABS.map(([k, label, icon], i) => `<a href="#${k}"${tab === k ? ' aria-current="page"' : ''}>${icon}<span>${label}</span><em>${i + 1}</em></a>`).join(''); }
+function updateLive(){ document.querySelectorAll('[data-k]').forEach(el => { const [k, a] = el.dataset.k.split(':'); const f = LIVE[k]; if (!f) return; const v = f(a); if (el.textContent !== v) el.textContent = v; }); }
+function route(){ const h = location.hash.replace('#', ''); tab = VIEWS[h] ? h : 'floor'; paintTabs(); render(true); updateLive(); }
+
+/* ---------- overlays ---------- */
+let lastFocus = null;
+function modal(html){ if (!$('#overlay').innerHTML) lastFocus = document.activeElement; $('#overlay').innerHTML = `<div class="scrim" data-act="scrim">${html}</div>`; const f = $('#overlay').querySelector('[aria-pressed="true"],button,a'); f && f.focus(); }
+function closeModal(){ $('#overlay').innerHTML = ''; LST.id = 0; lastFocus && lastFocus.focus && lastFocus.focus(); }
+function toast(msg){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; const box = $('#toasts'); box.appendChild(t); while (box.children.length > 3) box.firstChild.remove(); setTimeout(() => t.remove(), 3800); }
+
+/* ---------- actions ---------- */
+const after = () => { S.ver++; render(true); updateLive(); };
+function claimAll(){
+  let v = 0;
+  for (const f of myF()) { v += f.unclaimed; f.unclaimed = 0; }
+  for (const f of myRent()) { v += f.rentUn; f.rentUn = 0; }
+  v += S.svcUn; S.svcUn = 0;
+  S.wal.sol += v; return v;
+}
+document.addEventListener('click', async ev => {
+  const go = ev.target.closest('[data-go]');
+  if (go) { if ($('#overlay').innerHTML) closeModal(); location.hash = '#' + go.dataset.go; return; }
+  const a = ev.target.closest('[data-act]');
+  if (!a) { if (!ev.target.closest('.walletcell')) $('#walletMenu').hidden = true; return; }
+  const act = a.dataset.act;
+  if (act === 'scrim') { if (ev.target === a) closeModal(); return; }
+  switch (act) {
+    case 'close': closeModal(); break;
+    case 'wallet':
+      if (W.addr && a.id === 'walletBtn') { const m = $('#walletMenu'); paintWallet(); m.hidden = !m.hidden; }
+      else openWalletModal();
+      break;
+    case 'pickWallet': {
+      const entry = W.list[+a.dataset.i];
+      a.disabled = true; const em = a.querySelector('em'); if (em) em.textContent = 'Approve in wallet…';
+      try { await connectEntry(entry, false); closeModal(); toast(`Connected ${short(W.addr)}`); }
+      catch (err) { a.disabled = false; if (em) em.textContent = 'Detected'; toast(err && err.message && /reject|denied|cancel/i.test(err.message) ? 'Connection request was declined in the wallet.' : 'Couldn’t connect. Unlock the wallet and try again.'); }
+      break; }
+    case 'guestWallet': setWallet(randAddr(Math.random), null); closeModal(); toast('Connected as guest'); break;
+    case 'disconnect': clearWallet(); toast('Wallet disconnected'); break;
+    case 'copyAddr': try { await navigator.clipboard.writeText(W.addr); toast('Address copied'); } catch (e) { toast(W.addr); } break;
+    case 'build': {
+      const n = S.fac.length + 1, fee = mintPrice(n); if (!W.addr || n > CFG.SUPPLY || S.wal.sol < fee) break;
+      S.wal.sol -= fee; S.burnSol += fee * 0.5; S.burned += fee * 0.5 / price(); S.ops += fee * 0.5;
+      const f = { id: n, owner: W.addr, m: { research: 1, design: 0, assembly: 1, marketing: 0, packaging: 0 }, c: {}, live: 0, count: 0, unclaimed: 0, rentUn: 0, own: 0, life: 0, rv: 0, j: [], user: true, list: null, rent: null, t: S.t };
+      S.fac.push(f); fById.set(f.id, f); save();
+      toast(`Factory #${n} is built. Its line is starting up.`); location.hash = '#mine'; after(); break; }
+    case 'claim': { const f = fById.get(+a.dataset.id); if (!isMine(f)) break; const v = f.unclaimed; S.wal.sol += v; f.unclaimed = 0; toast(v > 0 ? `Collected ${fmtSol(v)} SOL` : 'Nothing to collect yet'); after(); break; }
+    case 'claimAll': { const v = claimAll(); toast(v > 0 ? `Collected ${fmtSol(v)} SOL` : 'Nothing to collect yet'); after(); break; }
+    case 'buyAsm': if (S.wal.sol >= 1) { const t = 1 / price(); S.wal.sol -= 1; S.wal.asm += t; toast(`Swapped 1 SOL for ${fmtTok(t)} $ASSEMBLE`); after(); } break;
+    case 'upMod': { const f = fById.get(+a.dataset.id), k = a.dataset.k; if (!isMine(f) || f.m[k] >= CFG.MAX_LVL) break; const c = f.m[k] === 0 ? CFG.INSTALL : upCost(f.m[k]); if (S.wal.asm < c) break; S.wal.asm -= c; S.burned += c; f.m[k]++; toast(`${MODS.find(x => x.k === k).name} ${f.m[k] === 1 ? 'installed' : 'is now level ' + f.m[k]}. ${fmtTok(c)} $ASSEMBLE burned.`); after(); break; }
+    case 'contractOpen': contractModal(a.dataset.id, a.dataset.k); break;
+    case 'contract': { const f = fById.get(+a.dataset.id), s = svcById.get(+a.dataset.s); if (!isMine(f) || !s) break; f.c[s.k] = s.id; closeModal(); toast(`Factory #${f.id} now runs factory #${s.f}’s ${MODS.find(x => x.k === s.k).short.toLowerCase()} at ${s.fee * 100}%`); after(); break; }
+    case 'release': { const f = fById.get(+a.dataset.id); if (!isMine(f)) break; delete f.c[a.dataset.k]; toast('Contract released'); after(); break; }
+    case 'offerOpen': OFFER.fee = 0.04; offerModal(a.dataset.id, a.dataset.k); break;
+    case 'ofFee': OFFER.fee = +a.dataset.v; offerModal(OFFER.f, OFFER.k); break;
+    case 'offerSave': { const f = fById.get(OFFER.f); if (!isMine(f)) break; addSvc(f, OFFER.k, OFFER.fee); closeModal(); toast(`Your ${MODS.find(x => x.k === OFFER.k).short.toLowerCase()} line is on the network at ${OFFER.fee * 100}%`); after(); break; }
+    case 'unoffer': { const s = svcById.get(+a.dataset.s); if (!s || !isMine(fById.get(s.f))) break; s.active = false; toast('Offer withdrawn. Factories using it fall back to their own machines.'); after(); break; }
+    case 'mf': M.mod = a.dataset.val; render(true); break;
+    case 'm': M[a.dataset.key] = a.dataset.key === 'dur' ? +a.dataset.val : a.dataset.val; render(true); break;
+    case 'listOpen': LST.id = 0; listModal(a.dataset.id); break;
+    case 'lsShare': LST.share = +a.dataset.v; listModal(LST.id); break;
+    case 'lsMult': LST.mult = +a.dataset.v; listModal(LST.id); break;
+    case 'listSave': { const f = fById.get(+a.dataset.id); if (!isMine(f)) break; f.list = { share: LST.share, price: +a.dataset.p, k: LST.mult }; closeModal(); toast(`Factory #${f.id} listed at ${fmtTok(f.list.price)} $ASSEMBLE an hour`); after(); break; }
+    case 'unlist': { const f = fById.get(+a.dataset.id); if (!isMine(f)) break; f.list = null; toast(`Factory #${f.id} unlisted`); after(); break; }
+    case 'rent': {
+      const f = fById.get(+a.dataset.id), d = DURS[M.dur]; if (!W.addr || !f || !f.list || f.rent || isMine(f)) break;
+      const cost = f.list.price * d.h * (1 - d.off); if (S.wal.asm < cost) break;
+      S.wal.asm -= cost; startRent(f, W.addr, true, d.h, cost, f.list.share);
+      toast(`You’re running factory #${f.id} for ${d.name}. You keep ${Math.round(f.list.share * 100)}% of the operator share.`); location.hash = '#mine'; after(); break; }
+    case 'docjump': { const el = document.getElementById('doc-' + a.dataset.id); el && el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); break; }
+  }
+  if (act !== 'wallet' && !a.closest('#walletMenu')) $('#walletMenu').hidden = true;
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('#overlay').innerHTML) closeModal(); $('#walletMenu').hidden = true; } });
+window.addEventListener('hashchange', route);
+
+/* ---------- boot ---------- */
+load();
+S.speed = 60;
+route();
+paintWallet();
+setTimeout(eagerConnect, 500);
+let lastTick = performance.now(), lastSave = 0;
+setInterval(() => {
+  const now = performance.now(), dt = Math.min(2, (now - lastTick) / 1000); lastTick = now;
+  if (S.speed > 0) advance(S.speed * dt / 60);
+  updateLive(); render(false);
+  if (now - lastSave > 5000) { save(); lastSave = now; }
+}, 250);
+window.addEventListener('pagehide', save);
+</script>
+</body>
+</html>
